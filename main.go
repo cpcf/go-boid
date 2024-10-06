@@ -15,7 +15,7 @@ import (
 )
 
 const (
-	fps      = 1
+	fps      = 15
 	asterisk = "*"
 )
 
@@ -140,7 +140,7 @@ func main() {
 }
 
 func initRandomBoids(count int, screenWidth, screenHeight int) []boid {
-	maxSpeed := 3
+	maxSpeed := 2
 	boids := make([]boid, count)
 	for i := range boids {
 		boids[i] = boid{
@@ -148,6 +148,8 @@ func initRandomBoids(count int, screenWidth, screenHeight int) []boid {
 			y:         rand.IntN(screenHeight),
 			xVelocity: rand.IntN(maxSpeed*2) - maxSpeed,
 			yVelocity: rand.IntN(maxSpeed*2) - maxSpeed,
+			maxX:      screenWidth,
+			maxY:      screenHeight,
 		}
 	}
 	return boids
