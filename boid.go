@@ -1,86 +1,117 @@
 package main
 
-import "math"
-
 type boid struct {
-	pos                  Point
-	xVelocity, yVelocity float64
-	maxX, maxY           float64
-	view                 *View
-	behindX, behindY     int
-	nearby               []boid
+	pos           Point
+	nextPos       Point
+	vel           Point
+	maxX, maxY    float64
+	bounce        bool
+	clampMinSpeed bool
 }
 
-var radius = 10
-var maxSpeed = 2.0
-var adjustRate = 0.015
+const (
+	radius         = 10.0
+	maxSpeed       = 1.0
+	adjustRate     = 0.015
+	alignmentRate  = 1.0
+	cohesionRate   = 1.0
+	separationRate = 1.0
+	targetMinSpeed = 0.2
+)
 
-func (b *boid) update() {
+func (b *boid) update(boids []boid) {
 
-	sepX, sepY := b.calcSeperation(b.nearby)
-	b.xVelocity += sepX
-	b.yVelocity += sepY
+	accel := b.calcAcceleration(boids)
 
-	b.xVelocity = math.Max(math.Min(b.xVelocity, maxSpeed), -maxSpeed)
-	b.yVelocity = math.Max(math.Min(b.yVelocity, maxSpeed), -maxSpeed)
+	b.vel = b.vel.Add(accel).Limit(-maxSpeed, maxSpeed)
 
-	b.pos.x += b.xVelocity
-	b.pos.y += b.yVelocity
+	if b.clampMinSpeed {
+		if b.vel.x >= 0 && b.vel.x < targetMinSpeed {
+			b.vel.x = Lerp(b.vel.x, targetMinSpeed, 0.5)
+		}
+		if b.vel.x < 0 && b.vel.x > -targetMinSpeed {
+			b.vel.x = Lerp(b.vel.x, -targetMinSpeed, 0.5)
+		}
+		if b.vel.y >= 0 && b.vel.y < targetMinSpeed {
+			b.vel.y = Lerp(b.vel.y, targetMinSpeed, 0.5)
+		}
+		if b.vel.y < 0 && b.vel.y > -targetMinSpeed {
+			b.vel.y = Lerp(b.vel.y, -targetMinSpeed, 0.5)
+		}
+	}
 
-	b.pos.x = math.Mod(b.pos.x+b.maxX, b.maxX)
-	b.pos.y = math.Mod(b.pos.y+b.maxY, b.maxY)
+	b.nextPos = b.pos.Add(b.vel)
+	if !b.bounce {
+		b.wrapAroundScreen()
+	}
 
-	b.calcBehind()
 }
 
-func (b *boid) calcNearby(boids []boid) {
-	b.view.Compute(b.viewLimit, int(b.pos.x), int(b.pos.y), radius)
+func (b *boid) wrapAroundScreen() {
+	if b.nextPos.x < 0 {
+		b.nextPos.x += b.maxX
+	} else if b.nextPos.x > b.maxX {
+		b.nextPos.x -= b.maxX
+	}
 
-	var nearby []boid
+	if b.nextPos.y < 0 {
+		b.nextPos.y += b.maxY
+	} else if b.nextPos.y > b.maxY {
+		b.nextPos.y -= b.maxY
+	}
+}
+
+func (b *boid) move() {
+	b.pos = b.nextPos
+}
+
+func (b *boid) calcAcceleration(boids []boid) Point {
+	accel := Point{}
+	if b.bounce {
+		accel = Point{bounce(b.pos.x, b.maxX), bounce(b.pos.y, b.maxY)}
+	}
+
+	var accelCohesion, accelSeparation, accelAlignment Point
+
+	sep, avgPos, avgVel, count := b.measureNearby(boids)
+
+	if count == 0 {
+		return accel
+	}
+	avgPos = avgPos.DivideV(float64(count))
+	avgVel = avgVel.DivideV(float64(count))
+
+	accelAlignment = avgVel.Subtract(b.vel).MultiplyV(adjustRate).MultiplyV(alignmentRate)
+	accelCohesion = avgPos.Subtract(b.pos).MultiplyV(adjustRate).MultiplyV(cohesionRate)
+	accelSeparation = sep.MultiplyV(adjustRate).MultiplyV(separationRate)
+
+	accel = accel.Add(accelAlignment).Add(accelCohesion).Add(accelSeparation)
+	return accel
+}
+
+func (b *boid) measureNearby(boids []boid) (Point, Point, Point, int) {
+	var sep, avgPos, avgVel Point
+	count := 0
+
 	for _, other := range boids {
 		if other.pos.x == b.pos.x && other.pos.y == b.pos.y {
 			continue
 		}
-		if _, ok := b.view.Visible[point{int(other.pos.x), int(other.pos.y)}]; ok {
-			nearby = append(nearby, other)
+		if b.pos.Distance(other.pos) < radius {
+			count++
+			avgVel = avgVel.Add(other.vel)
+			avgPos = avgPos.Add(other.pos)
+			sep = sep.Add(b.pos.Subtract(other.pos).DivideV(b.pos.Distance(other.pos)))
 		}
 	}
-	b.nearby = nearby
+	return sep, avgPos, avgVel, count
 }
 
-func (b *boid) calcBehind() {
-	max := b.xVelocity
-	if b.yVelocity > max {
-		max = b.yVelocity
+func bounce(pos, maxBorderPos float64) float64 {
+	if pos < radius {
+		return 1 / pos
+	} else if pos > maxBorderPos-radius {
+		return 1 / (pos - maxBorderPos)
 	}
-
-	if max == 0 {
-		return
-	}
-
-	dirX := b.xVelocity * -1 / max
-	dirY := b.yVelocity * -1 / max
-
-	b.behindX = int(b.pos.x + dirX)
-	b.behindY = int(b.pos.y + dirY)
-}
-
-func (b *boid) viewLimit(x, y int) bool {
-	return b.behindX == x && b.behindY == y
-}
-
-func (b *boid) calcSeperation(boids []boid) (x, y float64) {
-	var xSum, ySum float64
-	for _, other := range boids {
-		if other.pos.x == b.pos.x && other.pos.y == b.pos.y {
-			continue
-		}
-		xSum += (b.pos.x - other.pos.x) / b.distanceTo(other) * adjustRate
-		ySum += (b.pos.y - other.pos.y) / b.distanceTo(other) * adjustRate
-	}
-	return xSum, ySum
-}
-
-func (b *boid) distanceTo(other boid) float64 {
-	return math.Sqrt(math.Pow(float64(b.pos.x-other.pos.x), 2) + math.Pow(float64(b.pos.y-other.pos.y), 2))
+	return 0
 }

@@ -9,15 +9,18 @@ import (
 	"math/rand/v2"
 	"os"
 	"strings"
+	"sync"
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
 )
 
 const (
-	fps       = 30
-	boidCount = 100
-	asterisk  = "*"
+	fps           = 120
+	boidCount     = 250
+	asterisk      = "*"
+	bouncey       = true
+	clampMinSpeed = true
 )
 
 type cellbuffer struct {
@@ -146,20 +149,79 @@ func initRandomBoids(count int, screenWidth, screenHeight int) []boid {
 				x: rand.Float64() * float64(screenWidth),
 				y: rand.Float64() * float64(screenHeight),
 			},
-			xVelocity: rand.Float64()*maxSpeed*2 - maxSpeed,
-			yVelocity: rand.Float64()*maxSpeed*2 - maxSpeed,
-			maxX:      float64(screenWidth),
-			maxY:      float64(screenHeight),
-			view:      NewView(),
+			vel: Point{
+				x: rand.Float64()*maxSpeed*2 - maxSpeed,
+				y: rand.Float64()*maxSpeed*2 - maxSpeed,
+			},
+			maxX:          float64(screenWidth),
+			maxY:          float64(screenHeight),
+			bounce:        bouncey,
+			clampMinSpeed: clampMinSpeed,
 		}
 	}
 	return boids
 }
 
 func (m model) updateBoids() {
+	var wg sync.WaitGroup
 	for i := range m.boids {
-		m.boids[i].calcNearby(m.boids)
-		m.boids[i].update()
-		m.cells.set(int(m.boids[i].pos.x), int(m.boids[i].pos.y))
+		wg.Add(1)
+		go func(id int) {
+			defer wg.Done()
+			m.boids[i].update(m.boids)
+		}(i)
+		wg.Wait()
+		m.boids[i].move()
+		drawEllipse(&m.cells, m.boids[i].pos.x, m.boids[i].pos.y, 1, 1)
+	}
+}
+
+func drawEllipse(cb *cellbuffer, xc, yc, rx, ry float64) {
+	var (
+		dx, dy, d1, d2 float64
+		x              float64
+		y              = ry
+	)
+
+	d1 = ry*ry - rx*rx*ry + 0.25*rx*rx
+	dx = 2 * ry * ry * x
+	dy = 2 * rx * rx * y
+
+	for dx < dy {
+		cb.set(int(x+xc), int(y+yc))
+		cb.set(int(-x+xc), int(y+yc))
+		cb.set(int(x+xc), int(-y+yc))
+		cb.set(int(-x+xc), int(-y+yc))
+		if d1 < 0 {
+			x++
+			dx = dx + (2 * ry * ry)
+			d1 = d1 + dx + (ry * ry)
+		} else {
+			x++
+			y--
+			dx = dx + (2 * ry * ry)
+			dy = dy - (2 * rx * rx)
+			d1 = d1 + dx - dy + (ry * ry)
+		}
+	}
+
+	d2 = ((ry * ry) * ((x + 0.5) * (x + 0.5))) + ((rx * rx) * ((y - 1) * (y - 1))) - (rx * rx * ry * ry)
+
+	for y >= 0 {
+		cb.set(int(x+xc), int(y+yc))
+		cb.set(int(-x+xc), int(y+yc))
+		cb.set(int(x+xc), int(-y+yc))
+		cb.set(int(-x+xc), int(-y+yc))
+		if d2 > 0 {
+			y--
+			dy = dy - (2 * rx * rx)
+			d2 = d2 + (rx * rx) - dy
+		} else {
+			y--
+			x++
+			dx = dx + (2 * ry * ry)
+			dy = dy - (2 * rx * rx)
+			d2 = d2 + dx - dy + (rx * rx)
+		}
 	}
 }
