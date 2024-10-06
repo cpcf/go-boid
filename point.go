@@ -47,6 +47,12 @@ func (p1 Point) Distance(p2 Point) float64 {
 	return math.Sqrt(math.Pow(p1.x-p2.x, 2) + math.Pow(p1.y-p2.y, 2))
 }
 
+// Normalize returns a new point with the same direction but with a magnitude of 1
+func (p1 Point) Normalize() Point {
+	magnitude := math.Sqrt(math.Pow(p1.x, 2) + math.Pow(p1.y, 2))
+	return Point{x: math.Floor(p1.x/magnitude + 0.5), y: math.Floor(p1.y/magnitude + 0.5)}
+}
+
 // Linearly interpolates between two points by a given proportion
 func (p1 Point) Lerp(p2 Point, proportion float64) Point {
 	return Point{

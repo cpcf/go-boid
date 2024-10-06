@@ -17,8 +17,7 @@ import (
 
 const (
 	fps           = 120
-	boidCount     = 250
-	asterisk      = "*"
+	boidCount     = 500
 	bouncey       = true
 	clampMinSpeed = true
 )
@@ -37,12 +36,12 @@ func (c *cellbuffer) init(w, h int) {
 	c.wipe()
 }
 
-func (c cellbuffer) set(x, y int) {
+func (c cellbuffer) set(x, y int, s string) {
 	i := y*c.stride + x
 	if i > len(c.cells)-1 || x < 0 || y < 0 || x >= c.width() || y >= c.height() {
 		return
 	}
-	c.cells[i] = asterisk
+	c.cells[i] = s
 }
 
 func (c *cellbuffer) wipe() {
@@ -172,56 +171,22 @@ func (m model) updateBoids() {
 		}(i)
 		wg.Wait()
 		m.boids[i].move()
-		drawEllipse(&m.cells, m.boids[i].pos.x, m.boids[i].pos.y, 1, 1)
+		// drawEllipse(&m.cells, m.boids[i].pos.x, m.boids[i].pos.y, 1, 1)
+		drawTriangle(&m.cells, m.boids[i].pos, m.boids[i].forward)
 	}
 }
 
-func drawEllipse(cb *cellbuffer, xc, yc, rx, ry float64) {
-	var (
-		dx, dy, d1, d2 float64
-		x              float64
-		y              = ry
-	)
+func drawTriangle(cb *cellbuffer, centre, dir Point) {
+	cb.set(int(centre.x), int(centre.y), triangleRuneTable[dir])
+}
 
-	d1 = ry*ry - rx*rx*ry + 0.25*rx*rx
-	dx = 2 * ry * ry * x
-	dy = 2 * rx * rx * y
-
-	for dx < dy {
-		cb.set(int(x+xc), int(y+yc))
-		cb.set(int(-x+xc), int(y+yc))
-		cb.set(int(x+xc), int(-y+yc))
-		cb.set(int(-x+xc), int(-y+yc))
-		if d1 < 0 {
-			x++
-			dx = dx + (2 * ry * ry)
-			d1 = d1 + dx + (ry * ry)
-		} else {
-			x++
-			y--
-			dx = dx + (2 * ry * ry)
-			dy = dy - (2 * rx * rx)
-			d1 = d1 + dx - dy + (ry * ry)
-		}
-	}
-
-	d2 = ((ry * ry) * ((x + 0.5) * (x + 0.5))) + ((rx * rx) * ((y - 1) * (y - 1))) - (rx * rx * ry * ry)
-
-	for y >= 0 {
-		cb.set(int(x+xc), int(y+yc))
-		cb.set(int(-x+xc), int(y+yc))
-		cb.set(int(x+xc), int(-y+yc))
-		cb.set(int(-x+xc), int(-y+yc))
-		if d2 > 0 {
-			y--
-			dy = dy - (2 * rx * rx)
-			d2 = d2 + (rx * rx) - dy
-		} else {
-			y--
-			x++
-			dx = dx + (2 * ry * ry)
-			dy = dy - (2 * rx * rx)
-			d2 = d2 + dx - dy + (rx * rx)
-		}
-	}
+var triangleRuneTable = map[Point]string{
+	{-1, -1}: "◤",
+	{-1, 0}:  "◀",
+	{-1, 1}:  "◣",
+	{0, 1}:   "▼",
+	{1, 1}:   "◢",
+	{1, 0}:   "▶",
+	{1, -1}:  "◥",
+	{0, -1}:  "▲",
 }

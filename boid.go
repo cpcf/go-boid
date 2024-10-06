@@ -4,6 +4,7 @@ type boid struct {
 	pos           Point
 	nextPos       Point
 	vel           Point
+	forward       Point
 	maxX, maxY    float64
 	bounce        bool
 	clampMinSpeed bool
@@ -12,7 +13,7 @@ type boid struct {
 const (
 	radius         = 10.0
 	maxSpeed       = 1.0
-	adjustRate     = 0.015
+	adjustRate     = 0.05
 	alignmentRate  = 1.0
 	cohesionRate   = 1.0
 	separationRate = 1.0
@@ -44,6 +45,8 @@ func (b *boid) update(boids []boid) {
 	if !b.bounce {
 		b.wrapAroundScreen()
 	}
+
+	updateForward(b)
 
 }
 
@@ -114,4 +117,8 @@ func bounce(pos, maxBorderPos float64) float64 {
 		return 1 / (pos - maxBorderPos)
 	}
 	return 0
+}
+
+func updateForward(b *boid) {
+	b.forward = b.vel.Normalize()
 }
