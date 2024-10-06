@@ -15,8 +15,9 @@ import (
 )
 
 const (
-	fps      = 15
-	asterisk = "*"
+	fps       = 30
+	boidCount = 100
+	asterisk  = "*"
 )
 
 type cellbuffer struct {
@@ -100,7 +101,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		// 	m.targetX, m.targetY = float64(msg.Width)/2, float64(msg.Height)/2
 		// }
 		m.cells.init(msg.Width, msg.Height)
-		m.boids = initRandomBoids(50, msg.Width, msg.Height)
+		m.boids = initRandomBoids(boidCount, msg.Width, msg.Height)
 		return m, nil
 	// case tea.MouseMsg:
 	// 	if !m.cells.ready() {
@@ -115,10 +116,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 
 		m.cells.wipe()
-		for i := range m.boids {
-			m.boids[i].update()
-			m.cells.set(int(m.boids[i].x), int(m.boids[i].y))
-		}
+		m.updateBoids()
 		return m, animate()
 	default:
 		return m, nil
@@ -140,17 +138,28 @@ func main() {
 }
 
 func initRandomBoids(count int, screenWidth, screenHeight int) []boid {
-	maxSpeed := 2
+	maxSpeed := 2.0
 	boids := make([]boid, count)
 	for i := range boids {
 		boids[i] = boid{
-			x:         rand.IntN(screenWidth),
-			y:         rand.IntN(screenHeight),
-			xVelocity: rand.IntN(maxSpeed*2) - maxSpeed,
-			yVelocity: rand.IntN(maxSpeed*2) - maxSpeed,
-			maxX:      screenWidth,
-			maxY:      screenHeight,
+			pos: Point{
+				x: rand.Float64() * float64(screenWidth),
+				y: rand.Float64() * float64(screenHeight),
+			},
+			xVelocity: rand.Float64()*maxSpeed*2 - maxSpeed,
+			yVelocity: rand.Float64()*maxSpeed*2 - maxSpeed,
+			maxX:      float64(screenWidth),
+			maxY:      float64(screenHeight),
+			view:      NewView(),
 		}
 	}
 	return boids
+}
+
+func (m model) updateBoids() {
+	for i := range m.boids {
+		m.boids[i].calcNearby(m.boids)
+		m.boids[i].update()
+		m.cells.set(int(m.boids[i].pos.x), int(m.boids[i].pos.y))
+	}
 }
