@@ -7,42 +7,55 @@ type Point struct {
 	y float64
 }
 
-// Adds x and y of two vectors
-func (v1 Point) Add(v2 Point) Point {
-	return Point{x: v1.x + v2.x, y: v1.y + v2.y}
+// Adds the coordinates of two points
+func (p1 Point) Add(p2 Point) Point {
+	return Point{x: p1.x + p2.x, y: p1.y + p2.y}
 }
 
-// Subtracts x and y of two vectors
-func (v1 Point) Subtract(v2 Point) Point {
-	return Point{x: v1.x - v2.x, y: v1.y - v2.y}
+// Subtracts the coordinates of two points
+func (p1 Point) Subtract(p2 Point) Point {
+	return Point{x: p1.x - p2.x, y: p1.y - p2.y}
 }
 
-// Multiplies x and y of two vectors
-func (v1 Point) Multiply(v2 Point) Point {
-	return Point{x: v1.x * v2.x, y: v1.y * v2.y}
+// Multiplies the coordinates of two points
+func (p1 Point) Multiply(p2 Point) Point {
+	return Point{x: p1.x * p2.x, y: p1.y * p2.y}
 }
 
-// Adds a value v to a Vector
-func (vect Point) AddV(val float64) Point {
-	return Point{x: vect.x + val, y: vect.y + val}
+// Adds a scalar value to the coordinates of a point
+func (point Point) AddV(val float64) Point {
+	return Point{x: point.x + val, y: point.y + val}
 }
 
-// Multiplies a value v to a Vector
-func (vect Point) MultiplyV(val float64) Point {
-	return Point{x: vect.x * val, y: vect.y * val}
+// Multiplies the coordinates of a point by a scalar value
+func (point Point) MultiplyV(val float64) Point {
+	return Point{x: point.x * val, y: point.y * val}
 }
 
-// Divides a value v by a Vector
-func (vect Point) DivideV(val float64) Point {
-	return Point{x: vect.x / val, y: vect.y / val}
+// Divides the coordinates of a point by a scalar value
+func (point Point) DivideV(val float64) Point {
+	return Point{x: point.x / val, y: point.y / val}
 }
 
-// Limits a vector to the passed lower and upper bounds
-func (vect Point) Limit(lower, upper float64) Point {
-	return Point{x: math.Min(math.Max(vect.x, lower), upper), y: math.Min(math.Max(vect.y, lower), upper)}
+// Clamps the coordinates of a point to the specified lower and upper bounds
+func (point Point) Limit(lower, upper float64) Point {
+	return Point{x: math.Min(math.Max(point.x, lower), upper), y: math.Min(math.Max(point.y, lower), upper)}
 }
 
-// Calculates the distances between two vectors
-func (v1 Point) Distance(v2 Point) float64 {
-	return math.Sqrt(math.Pow(v1.x-v2.x, 2) + math.Pow(v1.y-v2.y, 2))
+// Calculates the distance between two points
+func (p1 Point) Distance(p2 Point) float64 {
+	return math.Sqrt(math.Pow(p1.x-p2.x, 2) + math.Pow(p1.y-p2.y, 2))
+}
+
+// Linearly interpolates between two points by a given proportion
+func (p1 Point) Lerp(p2 Point, proportion float64) Point {
+	return Point{
+		x: Lerp(p1.x, p2.x, proportion),
+		y: Lerp(p1.y, p2.y, proportion),
+	}
+}
+
+// Linearly interpolates between two values by a given proportion
+func Lerp(p0, p1, t float64) float64 {
+	return (1-t)*p0 + t*p1
 }
