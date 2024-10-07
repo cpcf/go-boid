@@ -12,7 +12,7 @@ type boid struct {
 
 const (
 	radius         = 7.0
-	maxSpeed       = 2.0
+	maxSpeed       = 1.0
 	adjustRate     = 0.025
 	alignmentRate  = 1.0
 	cohesionRate   = 1.0

@@ -7,7 +7,7 @@ https://dl.acm.org/doi/10.1145/37402.37406
 ## Output
 Runs in the terminal, using the https://github.com/charmbracelet/bubbletea framework to handle terminal output.
 
-Scales the number of boids to the terminal size. Works best on larger terminals.
+Scales the number of boids to the terminal size. Works best on larger terminals. Very large terminal sizes may cause performance issues.
 
 ![](https://github.com/cpcf/go-boid/blob/main/go-boid.gif)
 
