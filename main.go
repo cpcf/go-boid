@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"strconv"
 
@@ -36,36 +35,32 @@ var targetMinSpeed = 0.01
 
 func updateVars() {
 	if err := godotenv.Overload(); err != nil {
-		log.Fatal("Error loading .env file")
+		// If there's no .env file, we'll just use the defaults
+		return
 	}
-	if v := os.Getenv("FPS"); v != "" {
-		fps, _ = strconv.Atoi(v)
+	envVars := map[string]interface{}{
+		"FPS":              &fps,
+		"BOUNCE":           &bouncey,
+		"CLAMP_MIN_SPEED":  &clampMinSpeed,
+		"RADIUS":           &radius,
+		"MAX_SPEED":        &maxSpeed,
+		"ADJUST_RATE":      &adjustRate,
+		"ALIGNMENT_RATE":   &alignmentRate,
+		"COHESION_RATE":    &cohesionRate,
+		"SEPARATION_RATE":  &separationRate,
+		"TARGET_MIN_SPEED": &targetMinSpeed,
 	}
-	if v := os.Getenv("BOUNCE"); v != "" {
-		bouncey, _ = strconv.ParseBool(v)
-	}
-	if v := os.Getenv("CLAMP_MIN_SPEED"); v != "" {
-		clampMinSpeed, _ = strconv.ParseBool(v)
-	}
-	if v := os.Getenv("RADIUS"); v != "" {
-		radius, _ = strconv.ParseFloat(v, 64)
-	}
-	if v := os.Getenv("MAX_SPEED"); v != "" {
-		maxSpeed, _ = strconv.ParseFloat(v, 64)
-	}
-	if v := os.Getenv("ADJUST_RATE"); v != "" {
-		adjustRate, _ = strconv.ParseFloat(v, 64)
-	}
-	if v := os.Getenv("ALIGNMENT_RATE"); v != "" {
-		alignmentRate, _ = strconv.ParseFloat(v, 64)
-	}
-	if v := os.Getenv("COHESION_RATE"); v != "" {
-		cohesionRate, _ = strconv.ParseFloat(v, 64)
-	}
-	if v := os.Getenv("SEPARATION_RATE"); v != "" {
-		separationRate, _ = strconv.ParseFloat(v, 64)
-	}
-	if v := os.Getenv("TARGET_MIN_SPEED"); v != "" {
-		targetMinSpeed, _ = strconv.ParseFloat(v, 64)
+
+	for key, ptr := range envVars {
+		if v := os.Getenv(key); v != "" {
+			switch p := ptr.(type) {
+			case *int:
+				*p, _ = strconv.Atoi(v)
+			case *bool:
+				*p, _ = strconv.ParseBool(v)
+			case *float64:
+				*p, _ = strconv.ParseFloat(v, 64)
+			}
+		}
 	}
 }
