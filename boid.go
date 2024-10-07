@@ -11,13 +11,13 @@ type boid struct {
 }
 
 const (
-	radius         = 10.0
-	maxSpeed       = 1.0
-	adjustRate     = 0.05
+	radius         = 7.0
+	maxSpeed       = 2.0
+	adjustRate     = 0.025
 	alignmentRate  = 1.0
 	cohesionRate   = 1.0
 	separationRate = 1.0
-	targetMinSpeed = 0.2
+	targetMinSpeed = 0.01
 )
 
 func (b *boid) update(boids []boid) {
@@ -104,7 +104,7 @@ func (b *boid) measureNearby(boids []boid) (Point, Point, Point, int) {
 			count++
 			avgVel = avgVel.Add(other.vel)
 			avgPos = avgPos.Add(other.pos)
-			sep = sep.Add(b.pos.Subtract(other.pos).DivideV(b.pos.Distance(other.pos)))
+			sep = sep.Add(b.pos.Subtract(other.pos).DivideV(b.pos.Distance(other.pos) * 1.5))
 		}
 	}
 	return sep, avgPos, avgVel, count
