@@ -14,7 +14,7 @@ Scales the number of boids to the terminal size. Works best on larger terminals.
 ## Installation
 
 ```bash
-go get github.com/go-boid/go-boid
+go get github.com/cpcf/go-boid
 ```
 
 ## Usage
