@@ -1,4 +1,4 @@
-module github.com/cpcf/go-boid
+module github.com/cpcf/go-boids
 
 go 1.23.1
 
