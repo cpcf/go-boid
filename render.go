@@ -1,7 +1,6 @@
 package main
 
 import (
-	"math/rand/v2"
 	"sync"
 	"time"
 
@@ -54,33 +53,6 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m model) View() string {
 	return m.cells.String()
-}
-
-func initBoidsOnScreenSize(screenWidth, screenHeight int) []boid {
-	count := screenWidth*screenHeight/100 + 1
-	return initRandomBoids(count, screenWidth, screenHeight)
-}
-
-func initRandomBoids(count int, screenWidth, screenHeight int) []boid {
-	maxSpeed := 2.0
-	boids := make([]boid, count)
-	for i := range boids {
-		boids[i] = boid{
-			pos: Point{
-				x: rand.Float64() * float64(screenWidth),
-				y: rand.Float64() * float64(screenHeight),
-			},
-			vel: Point{
-				x: rand.Float64()*maxSpeed*2 - maxSpeed,
-				y: rand.Float64()*maxSpeed*2 - maxSpeed,
-			},
-			maxX:          float64(screenWidth),
-			maxY:          float64(screenHeight),
-			bounce:        bouncey,
-			clampMinSpeed: clampMinSpeed,
-		}
-	}
-	return boids
 }
 
 func (m model) updateBoids() {
