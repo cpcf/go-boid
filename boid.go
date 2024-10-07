@@ -12,16 +12,6 @@ type boid struct {
 	clampMinSpeed bool
 }
 
-const (
-	radius         = 7.0
-	maxSpeed       = 0.5
-	adjustRate     = 0.025
-	alignmentRate  = 1.0
-	cohesionRate   = 1.0
-	separationRate = 1.0
-	targetMinSpeed = 0.01
-)
-
 func initBoidsOnScreenSize(screenWidth, screenHeight int) []boid {
 	count := screenWidth*screenHeight/125 + 1
 	return initRandomBoids(count, screenWidth, screenHeight)

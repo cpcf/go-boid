@@ -7,16 +7,10 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 )
 
-const (
-	fps           = 120
-	bouncey       = true
-	clampMinSpeed = true
-)
-
 type frameMsg struct{}
 
 func animate() tea.Cmd {
-	return tea.Tick(time.Second/fps, func(_ time.Time) tea.Msg {
+	return tea.Tick(time.Second/time.Duration(fps), func(_ time.Time) tea.Msg {
 		return frameMsg{}
 	})
 }
@@ -35,6 +29,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.KeyMsg:
 		return m, tea.Quit
 	case tea.WindowSizeMsg:
+		updateVars()
 		m.cells.init(msg.Width, msg.Height)
 		m.boids = initBoidsOnScreenSize(msg.Width, msg.Height)
 		return m, nil

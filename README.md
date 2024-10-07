@@ -24,4 +24,20 @@ go-boids
 ```
 
 ## Parameters
-Currently hard coded in main.go and boid.go
+Configurable parameters are set in the `.env` file. Resize window or restart to apply changes.
+
+Defaults and descriptions are as follows:
+
+```bash
+FPS               = 120   # Frames per second
+BOUNCE            = true  # Bounce off walls
+CLAMP_MIN_SPEED   = true  # Sets the minimum speed
+TARGET_MIN_SPEED  = 0.01  # Minimum speed of boid if clamped
+
+RADIUS            = 7.0   # Tiles from boid that affect it
+MAX_SPEED         = 0.5   # Maximum speed of boid
+ADJUST_RATE       = 0.025 # Rate of adjustment for alignment, cohesion, and separation
+ALIGNMENT_RATE    = 1.0   # Muliplier for alignment adjustment
+COHESION_RATE     = 1.0   # Muliplier for cohesion adjustment
+SEPARATION_RATE   = 1.0   # Muliplier for separation adjustment
+```
